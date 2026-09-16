@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
 import express from "express";
 import cors from "cors";
@@ -9,13 +8,11 @@ import authRoutes from "./routers/auth.routes.js";
 
 const app = express();
 
-
 // =====================================================
 // DATABASE
 // =====================================================
 
 connectDB();
-
 
 // =====================================================
 // MIDDLEWARE
@@ -24,25 +21,22 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-
 // =====================================================
 // ROUTES
 // =====================================================
 
 app.use("/api/v1/auth", authRoutes);
 
-
 // =====================================================
 // TEST ROUTE
 // =====================================================
 
 app.get("/", (req, res) => {
-    res.json({
-        success: true,
-        message: "Medical Booking API is running"
-    });
+  res.json({
+    success: true,
+    message: "Medical Booking API is running",
+  });
 });
-
 
 // =====================================================
 // SERVER
@@ -51,5 +45,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

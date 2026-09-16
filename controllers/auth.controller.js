@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
+import { sendOTPEmail } from "../utils/sendEmail.js";
 
 
 // =====================================================
@@ -77,14 +78,14 @@ export const registerUser = async (req, res) => {
         });
 
         // =============================================
-        // EMAIL OTP
+        // SEND OTP TO EMAIL
         // =============================================
-        // Abhi testing ke liye console mein OTP
-        console.log("OTP:", otp);
+
+        await sendOTPEmail(email, otp);
 
         return res.status(201).json({
             success: true,
-            message: "Registration successful. Please verify your OTP.",
+            message: "Registration successful. OTP sent to your email.",
             userId: user._id
         });
 
@@ -147,7 +148,6 @@ export const verifyOTP = async (req, res) => {
 
         // Check OTP expiry
         if (user.otpExpiresAt < new Date()) {
-
             return res.status(400).json({
                 success: false,
                 message: "OTP has expired. Please request a new OTP."
@@ -243,10 +243,10 @@ export const resendOTP = async (req, res) => {
         await user.save();
 
         // =============================================
-        // EMAIL OTP
+        // SEND NEW OTP TO EMAIL
         // =============================================
-        // Testing ke liye
-        console.log("New OTP:", otp);
+
+        await sendOTPEmail(user.email, otp);
 
         return res.status(200).json({
             success: true,
