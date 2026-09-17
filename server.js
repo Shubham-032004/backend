@@ -5,6 +5,7 @@ import cors from "cors";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routers/auth.routes.js";
+import patientRoutes from "./routers/patient.routes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(express.json());
 // =====================================================
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/patients", patientRoutes);
 
 // =====================================================
 // TEST ROUTE
