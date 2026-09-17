@@ -1,6 +1,6 @@
 import Patient from "../models/Patient.js";
 
-// ================= CREATE PATIENT PROFILE =================
+// ================= CREATE PATIENT PROFILE ==================
 
 export const createPatientProfile = async (req, res) => {
     try {
