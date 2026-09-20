@@ -6,6 +6,10 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routers/auth.routes.js";
 import patientRoutes from "./routers/patient.routes.js";
+import doctorRoutes from "./routers/doctor.routes.js";
+import hospitalRoutes from "./routers/hospital.routes.js"
+import doctorAvailabilityRoutes from "./routers/doctorAvailability.routes.js";
+import appointmentRoutes from "./routers/appointment.routes.js";
 
 const app = express();
 
@@ -28,6 +32,10 @@ app.use(express.json());
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/patients", patientRoutes);
+app.use("/api/v1/doctors", doctorRoutes);
+app.use("/api/v1/hospital",hospitalRoutes)
+app.use("/api/v1/availability",doctorAvailabilityRoutes)
+app.use("/api/v1/appointments", appointmentRoutes);
 
 // =====================================================
 // TEST ROUTE

@@ -26,7 +26,9 @@ export const registerUser = async (req, res) => {
             name,
             email,
             password,
-            phone
+            phone,
+            role,
+            
         } = req.body;
 
         // Check required fields
@@ -62,20 +64,19 @@ export const registerUser = async (req, res) => {
         );
 
         // Create user
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            phone,
+       const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    phone,
 
-            // Public registration = patient
-            role: "patient",
+    role: role,
 
-            isverified: false,
+    isverified: false,
 
-            otp: hashedOTP,
-            otpExpiresAt
-        });
+    otp: hashedOTP,
+    otpExpiresAt
+});
 
         // =============================================
         // SEND OTP TO EMAIL
