@@ -1,10 +1,11 @@
 
 import Appointment from "../models/Appointment.js";
 import Patient from "../models/Patient.js";
+import Doctor from "../models/Doctor.js";
 import DoctorAvailability from "../models/DoctorAvailability.js";
 
 // =====================================================
-// CREATE APPOINTMENT
+// CREATE APPOINTMENT - PATIENT
 // =====================================================
 
 export const createAppointment = async (req, res) => {
@@ -180,7 +181,7 @@ export const createAppointment = async (req, res) => {
 
 
 // =====================================================
-// GET MY APPOINTMENTS
+// GET MY APPOINTMENTS - PATIENT
 // =====================================================
 
 export const getMyAppointments = async (req, res) => {
@@ -241,7 +242,127 @@ export const getMyAppointments = async (req, res) => {
 
 
 // =====================================================
-// GET APPOINTMENT BY ID
+// GET DOCTOR'S APPOINTMENTS - DOCTOR
+// =====================================================
+
+export const getDoctorAppointments = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // ================= FIND DOCTOR =================
+
+        const doctor = await Doctor.findOne({
+            user: userId
+        });
+
+        if (!doctor) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor profile not found"
+            });
+        }
+
+        // ================= GET DOCTOR APPOINTMENTS =================
+
+        const appointments = await Appointment
+            .find({
+                doctor: doctor._id
+            })
+            .populate({
+                path: "patient",
+                populate: {
+                    path: "user",
+                    select: "name email phone profileImage"
+                }
+            })
+            .populate(
+                "hospital",
+                "name address phone"
+            )
+            .populate(
+                "availability",
+                "day startTime endTime consultationType"
+            )
+            .sort({
+                appointmentDate: 1,
+                startTime: 1
+            });
+
+        return res.status(200).json({
+            success: true,
+            count: appointments.length,
+            appointments
+        });
+
+    } catch (error) {
+        console.error(
+            "Get Doctor Appointments Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+
+// =====================================================
+// GET ALL APPOINTMENTS - ADMIN
+// =====================================================
+
+export const getAllAppointments = async (req, res) => {
+    try {
+
+        const appointments = await Appointment
+            .find()
+            .populate({
+                path: "patient",
+                populate: {
+                    path: "user",
+                    select: "name email phone profileImage"
+                }
+            })
+            .populate(
+                "doctor",
+                "specialization experienceYears consultationFee bio languages"
+            )
+            .populate(
+                "hospital",
+                "name address phone"
+            )
+            .populate(
+                "availability",
+                "day startTime endTime consultationType"
+            )
+            .sort({
+                appointmentDate: 1,
+                startTime: 1
+            });
+
+        return res.status(200).json({
+            success: true,
+            count: appointments.length,
+            appointments
+        });
+
+    } catch (error) {
+        console.error(
+            "Get All Appointments Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+
+// =====================================================
+// GET APPOINTMENT BY ID - PATIENT
 // =====================================================
 
 export const getAppointmentById = async (req, res) => {
@@ -306,7 +427,7 @@ export const getAppointmentById = async (req, res) => {
 
 
 // =====================================================
-// CANCEL APPOINTMENT
+// CANCEL APPOINTMENT - PATIENT
 // =====================================================
 
 export const cancelAppointment = async (req, res) => {
