@@ -6,10 +6,17 @@ import {
     resendOTP,
     loginUser,
     getProfile,
-    logoutUser
+    logoutUser,
+    uploadProfileImage,
+    testCloudinary
 } from "../controllers/auth.controller.js";
 
-import { protect } from "../middleware/auth.middleware.js";
+import {
+    protect
+} from "../middleware/auth.middleware.js";
+
+import upload from "../middleware/upload.js";
+
 
 const router = express.Router();
 
@@ -19,27 +26,68 @@ const router = express.Router();
 // =====================================================
 
 // Register
-router.post("/register", registerUser);
+router.post(
+    "/register",
+    registerUser
+);
+
 
 // Verify OTP
-router.post("/verify-otp", verifyOTP);
+router.post(
+    "/verify-otp",
+    verifyOTP
+);
+
 
 // Resend OTP
-router.post("/resend-otp", resendOTP);
+router.post(
+    "/resend-otp",
+    resendOTP
+);
+
 
 // Login
-router.post("/login", loginUser);
+router.post(
+    "/login",
+    loginUser
+);
 
 
 // =====================================================
 // PROTECTED ROUTES
 // =====================================================
 
+
 // Get logged-in user's profile
-router.get("/profile", protect, getProfile);
+router.get(
+    "/profile",
+    protect,
+    getProfile
+);
+
+
+// Upload profile image
+router.patch(
+    "/profile/image",
+    protect,
+    upload.single("profileImage"),
+    uploadProfileImage
+);
+
 
 // Logout
-router.post("/logout", protect, logoutUser);
+router.post(
+    "/logout",
+    protect,
+    logoutUser
+);
+
+
+
+router.get(
+    "/cloudinary-test",
+    testCloudinary
+);
 
 
 export default router;

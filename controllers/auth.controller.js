@@ -1,23 +1,26 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+
 import User from "../models/User.js";
+import cloudinary from "../config/cloudinary.js";
 
 
-// ==========================================
-// Generate OTP
-// ==========================================
+// =====================================================
+// GENERATE OTP
+// =====================================================
 
 const generateOTP = () => {
     return crypto.randomInt(100000, 1000000).toString();
 };
 
 
-// ==========================================
-// Generate JWT Token
-// ==========================================
+// =====================================================
+// GENERATE JWT TOKEN
+// =====================================================
 
 const generateToken = (user) => {
+
     return jwt.sign(
         {
             id: user._id,
@@ -29,14 +32,16 @@ const generateToken = (user) => {
             expiresIn: "7d"
         }
     );
+
 };
 
 
-// ==========================================
-// REGISTER
-// ==========================================
+// =====================================================
+// REGISTER USER
+// =====================================================
 
 export const registerUser = async (req, res) => {
+
     try {
 
         const {
@@ -53,18 +58,24 @@ export const registerUser = async (req, res) => {
         // -----------------------------
 
         if (!name || !email || !password || !phone) {
+
             return res.status(400).json({
                 success: false,
-                message: "Name, email, password and phone are required"
+                message:
+                    "Name, email, password and phone are required"
             });
+
         }
 
 
         if (password.length < 6) {
+
             return res.status(400).json({
                 success: false,
-                message: "Password must be at least 6 characters"
+                message:
+                    "Password must be at least 6 characters"
             });
+
         }
 
 
@@ -78,18 +89,24 @@ export const registerUser = async (req, res) => {
 
 
         if (existingUser) {
+
             return res.status(400).json({
                 success: false,
-                message: "User with this email already exists"
+                message:
+                    "User with this email already exists"
             });
+
         }
 
 
         // -----------------------------
-        // Hash Password
+        // Hash password
         // -----------------------------
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(
+            password,
+            10
+        );
 
 
         // -----------------------------
@@ -98,17 +115,19 @@ export const registerUser = async (req, res) => {
 
         const otp = generateOTP();
 
-        const hashedOTP = await bcrypt.hash(otp, 10);
+        const hashedOTP = await bcrypt.hash(
+            otp,
+            10
+        );
 
 
-        // OTP expiry
         const otpExpiresAt = new Date(
             Date.now() + 10 * 60 * 1000
         );
 
 
         // -----------------------------
-        // Create User
+        // Create user
         // -----------------------------
 
         const user = await User.create({
@@ -132,16 +151,12 @@ export const registerUser = async (req, res) => {
         });
 
 
-        // ==========================================
-        // EMAIL DISABLED FOR DEVELOPMENT
-        // ==========================================
+        // -----------------------------
+        // Email disabled for development
+        // -----------------------------
 
         // await sendOTPEmail(email, otp);
 
-
-        // -----------------------------
-        // Response
-        // -----------------------------
 
         return res.status(201).json({
 
@@ -160,7 +175,10 @@ export const registerUser = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Register Error:", error);
+        console.error(
+            "Register Error:",
+            error
+        );
 
         return res.status(500).json({
 
@@ -173,12 +191,13 @@ export const registerUser = async (req, res) => {
         });
 
     }
+
 };
 
 
-// ==========================================
+// =====================================================
 // VERIFY OTP
-// ==========================================
+// =====================================================
 
 export const verifyOTP = async (req, res) => {
 
@@ -200,7 +219,8 @@ export const verifyOTP = async (req, res) => {
 
                 success: false,
 
-                message: "userId and OTP are required"
+                message:
+                    "userId and OTP are required"
 
             });
 
@@ -208,7 +228,7 @@ export const verifyOTP = async (req, res) => {
 
 
         // -----------------------------
-        // Find User
+        // Find user
         // -----------------------------
 
         const user = await User.findById(userId)
@@ -228,14 +248,10 @@ export const verifyOTP = async (req, res) => {
         }
 
 
-        // ==========================================
+        // =================================================
         // DEVELOPMENT MODE
-        // ==========================================
-        // IMPORTANT:
-        // OTP comparison is intentionally disabled.
-        // Any OTP entered by user will be accepted.
-        // ==========================================
-
+        // Any OTP is accepted
+        // =================================================
 
         user.isverified = true;
 
@@ -251,32 +267,38 @@ export const verifyOTP = async (req, res) => {
 
             success: true,
 
-            message: "Email verified successfully"
+            message:
+                "Email verified successfully"
 
         });
 
 
     } catch (error) {
 
-        console.error("Verify OTP Error:", error);
+        console.error(
+            "Verify OTP Error:",
+            error
+        );
 
         return res.status(500).json({
 
             success: false,
 
-            message: "OTP verification failed",
+            message:
+                "OTP verification failed",
 
             error: error.message
 
         });
 
     }
+
 };
 
 
-// ==========================================
+// =====================================================
 // RESEND OTP
-// ==========================================
+// =====================================================
 
 export const resendOTP = async (req, res) => {
 
@@ -293,7 +315,8 @@ export const resendOTP = async (req, res) => {
 
                 success: false,
 
-                message: "userId is required"
+                message:
+                    "userId is required"
 
             });
 
@@ -301,7 +324,7 @@ export const resendOTP = async (req, res) => {
 
 
         // -----------------------------
-        // Find User
+        // Find user
         // -----------------------------
 
         const user = await User.findById(userId);
@@ -313,7 +336,8 @@ export const resendOTP = async (req, res) => {
 
                 success: false,
 
-                message: "User not found"
+                message:
+                    "User not found"
 
             });
 
@@ -321,12 +345,15 @@ export const resendOTP = async (req, res) => {
 
 
         // -----------------------------
-        // Generate New OTP
+        // Generate new OTP
         // -----------------------------
 
         const otp = generateOTP();
 
-        const hashedOTP = await bcrypt.hash(otp, 10);
+        const hashedOTP = await bcrypt.hash(
+            otp,
+            10
+        );
 
 
         user.otp = hashedOTP;
@@ -339,9 +366,9 @@ export const resendOTP = async (req, res) => {
         await user.save();
 
 
-        // ==========================================
-        // EMAIL DISABLED FOR DEVELOPMENT
-        // ==========================================
+        // -----------------------------
+        // Email disabled for development
+        // -----------------------------
 
         // await sendOTPEmail(user.email, otp);
 
@@ -350,7 +377,8 @@ export const resendOTP = async (req, res) => {
 
             success: true,
 
-            message: "New OTP generated successfully",
+            message:
+                "New OTP generated successfully",
 
             // Development only
             generatedOTP: otp
@@ -360,25 +388,30 @@ export const resendOTP = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Resend OTP Error:", error);
+        console.error(
+            "Resend OTP Error:",
+            error
+        );
 
         return res.status(500).json({
 
             success: false,
 
-            message: "Failed to resend OTP",
+            message:
+                "Failed to resend OTP",
 
             error: error.message
 
         });
 
     }
+
 };
 
 
-// ==========================================
-// LOGIN
-// ==========================================
+// =====================================================
+// LOGIN USER
+// =====================================================
 
 export const loginUser = async (req, res) => {
 
@@ -400,7 +433,8 @@ export const loginUser = async (req, res) => {
 
                 success: false,
 
-                message: "Email and password are required"
+                message:
+                    "Email and password are required"
 
             });
 
@@ -408,11 +442,13 @@ export const loginUser = async (req, res) => {
 
 
         // -----------------------------
-        // Find User
+        // Find user
         // -----------------------------
 
         const user = await User.findOne({
+
             email: email.toLowerCase()
+
         }).select("+password");
 
 
@@ -422,7 +458,8 @@ export const loginUser = async (req, res) => {
 
                 success: false,
 
-                message: "Invalid email or password"
+                message:
+                    "Invalid email or password"
 
             });
 
@@ -430,13 +467,14 @@ export const loginUser = async (req, res) => {
 
 
         // -----------------------------
-        // Check Password
+        // Check password
         // -----------------------------
 
-        const isPasswordMatch = await bcrypt.compare(
-            password,
-            user.password
-        );
+        const isPasswordMatch =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
 
 
         if (!isPasswordMatch) {
@@ -445,7 +483,8 @@ export const loginUser = async (req, res) => {
 
                 success: false,
 
-                message: "Invalid email or password"
+                message:
+                    "Invalid email or password"
 
             });
 
@@ -453,7 +492,7 @@ export const loginUser = async (req, res) => {
 
 
         // -----------------------------
-        // Check Verification
+        // Check verification
         // -----------------------------
 
         if (!user.isverified) {
@@ -471,7 +510,7 @@ export const loginUser = async (req, res) => {
 
 
         // -----------------------------
-        // Update Last Login
+        // Last login
         // -----------------------------
 
         user.lastLogin = new Date();
@@ -480,7 +519,7 @@ export const loginUser = async (req, res) => {
 
 
         // -----------------------------
-        // Generate Token
+        // Generate token
         // -----------------------------
 
         const token = generateToken(user);
@@ -490,7 +529,8 @@ export const loginUser = async (req, res) => {
 
             success: true,
 
-            message: "Login successful",
+            message:
+                "Login successful",
 
             token,
 
@@ -517,31 +557,38 @@ export const loginUser = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Login Error:", error);
+        console.error(
+            "Login Error:",
+            error
+        );
 
         return res.status(500).json({
 
             success: false,
 
-            message: "Login failed",
+            message:
+                "Login failed",
 
             error: error.message
 
         });
 
     }
+
 };
 
 
-// ==========================================
+// =====================================================
 // GET PROFILE
-// ==========================================
+// =====================================================
 
 export const getProfile = async (req, res) => {
 
     try {
 
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(
+            req.user.id
+        );
 
 
         if (!user) {
@@ -550,7 +597,8 @@ export const getProfile = async (req, res) => {
 
                 success: false,
 
-                message: "User not found"
+                message:
+                    "User not found"
 
             });
 
@@ -561,38 +609,67 @@ export const getProfile = async (req, res) => {
 
             success: true,
 
-            user
+            user: {
+
+                id: user._id,
+
+                name: user.name,
+
+                email: user.email,
+
+                phone: user.phone,
+
+                role: user.role,
+
+                isverified: user.isverified,
+
+                profileImage: user.profileImage,
+
+                lastLogin: user.lastLogin,
+
+                createdAt: user.createdAt,
+
+                updatedAt: user.updatedAt
+
+            }
 
         });
 
 
     } catch (error) {
 
-        console.error("Get Profile Error:", error);
+        console.error(
+            "Get Profile Error:",
+            error
+        );
 
         return res.status(500).json({
 
             success: false,
 
-            message: "Failed to get profile",
+            message:
+                "Failed to get profile",
 
             error: error.message
 
         });
 
     }
+
 };
 
 
-// ==========================================
-// LOGOUT
-// ==========================================
+// =====================================================
+// LOGOUT USER
+// =====================================================
 
 export const logoutUser = async (req, res) => {
 
     try {
 
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(
+            req.user.id
+        );
 
 
         if (!user) {
@@ -601,7 +678,8 @@ export const logoutUser = async (req, res) => {
 
                 success: false,
 
-                message: "User not found"
+                message:
+                    "User not found"
 
             });
 
@@ -609,7 +687,7 @@ export const logoutUser = async (req, res) => {
 
 
         // Increment token version
-        // Old JWT will become invalid
+        // Old token becomes invalid
 
         user.tokenVersion += 1;
 
@@ -620,24 +698,219 @@ export const logoutUser = async (req, res) => {
 
             success: true,
 
-            message: "Logout successful"
+            message:
+                "Logout successful"
 
         });
 
 
     } catch (error) {
 
-        console.error("Logout Error:", error);
+        console.error(
+            "Logout Error:",
+            error
+        );
 
         return res.status(500).json({
 
             success: false,
 
-            message: "Logout failed",
+            message:
+                "Logout failed",
 
             error: error.message
 
         });
 
+    }
+
+};
+
+
+// =====================================================
+// UPLOAD PROFILE IMAGE
+// =====================================================
+
+export const uploadProfileImage = async (req, res) => {
+    try {
+
+        // ==========================================
+        // Check file
+        // ==========================================
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select a profile image"
+            });
+        }
+
+
+        console.log("File received:", {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            bufferSize: req.file.buffer?.length
+        });
+
+
+        // ==========================================
+        // Find user
+        // ==========================================
+
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+
+        // ==========================================
+        // Upload to Cloudinary
+        // ==========================================
+
+        const result = await new Promise((resolve, reject) => {
+
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: "clinexa/profile-images",
+                    resource_type: "image"
+                },
+
+                (error, result) => {
+
+                    if (error) {
+                        console.error(
+                            "Cloudinary Upload Error:",
+                            error
+                        );
+
+                        reject(error);
+
+                    } else {
+
+                        console.log(
+                            "Cloudinary Upload Success:",
+                            result.secure_url
+                        );
+
+                        resolve(result);
+                    }
+                }
+            );
+
+
+            uploadStream.on("error", (error) => {
+
+                console.error(
+                    "Upload Stream Error:",
+                    error
+                );
+
+                reject(error);
+
+            });
+
+
+            uploadStream.end(req.file.buffer);
+
+        });
+
+
+        // ==========================================
+        // Save URL
+        // ==========================================
+
+        user.profileImage = result.secure_url;
+
+        await user.save();
+
+
+        // ==========================================
+        // Response
+        // ==========================================
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Profile image uploaded successfully",
+
+            user: {
+
+                id: user._id,
+
+                name: user.name,
+
+                email: user.email,
+
+                phone: user.phone,
+
+                role: user.role,
+
+                profileImage:
+                    user.profileImage
+
+            }
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Profile Image Upload Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to upload profile image",
+
+            error: error.message
+
+        });
+
+    }
+};
+
+
+
+
+
+
+
+
+// =====================================================
+// TEST CLOUDINARY
+// =====================================================
+
+export const testCloudinary = async (req, res) => {
+    try {
+
+        const result = await cloudinary.api.ping();
+
+        return res.status(200).json({
+            success: true,
+            message: "Cloudinary connected successfully",
+            result
+        });
+
+    } catch (error) {
+
+        console.error("Cloudinary Test Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Cloudinary connection failed",
+            error: error.message
+        });
     }
 };
