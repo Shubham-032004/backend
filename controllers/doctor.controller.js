@@ -2,7 +2,7 @@ import Doctor from "../models/Doctor.js";
 
 import Department from "../models/Department.js";
 
-// ================= CREATE DOCTOR PROFILE =================
+// ================= CREATE DOCTOR PROFILE ==================
 
 export const createDoctorProfile = async (req, res) => {
     try {
