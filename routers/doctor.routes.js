@@ -8,6 +8,7 @@ import {
     getDoctorById,
     getAllDoctors,
     deleteDoctorProfile,
+    searchDoctors
 } from "../controllers/doctor.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -16,6 +17,8 @@ const router = express.Router();
 
 
 // ================= PROTECTED ROUTES =================
+
+
 
 // Create Doctor Profile
 router.post("/", protect, createDoctorProfile);
@@ -31,6 +34,8 @@ router.delete("/me", protect, deleteDoctorProfile);
 
 
 // ================= PUBLIC ROUTES =================
+
+router.get("/search", searchDoctors);
 
 // Get All Doctors
 router.get("/", getAllDoctors);
