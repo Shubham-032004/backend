@@ -8,7 +8,8 @@ import {
     getDoctorById,
     getAllDoctors,
     deleteDoctorProfile,
-    searchDoctors
+    searchDoctors,
+     getSpecializationCounts
 } from "../controllers/doctor.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -36,6 +37,11 @@ router.delete("/me", protect, deleteDoctorProfile);
 // ================= PUBLIC ROUTES =================
 
 router.get("/search", searchDoctors);
+
+router.get(
+    "/specializations",
+    getSpecializationCounts
+);
 
 // Get All Doctors
 router.get("/", getAllDoctors);

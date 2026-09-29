@@ -599,3 +599,60 @@ export const searchDoctors = async (req, res) => {
         });
     }
 };
+
+
+
+// ================= SPECIALIZATION COUNT =================
+
+export const getSpecializationCounts = async (req, res) => {
+    try {
+
+        const specializations = await Doctor.aggregate([
+            {
+                $match: {
+                    isApproved: true
+                }
+            },
+
+            {
+                $group: {
+                    _id: "$specialization",
+                    count: {
+                        $sum: 1
+                    }
+                }
+            },
+
+            {
+                $sort: {
+                    count: -1
+                }
+            },
+
+            {
+                $project: {
+                    _id: 0,
+                    specialization: "$_id",
+                    count: 1
+                }
+            }
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            specializations
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get Specialization Counts Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to get specialization counts"
+        });
+    }
+};
