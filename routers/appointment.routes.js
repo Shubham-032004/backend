@@ -1,4 +1,3 @@
-
 import express from "express";
 
 import {
@@ -7,7 +6,9 @@ import {
     getDoctorAppointments,
     getAllAppointments,
     getAppointmentById,
-    cancelAppointment
+    cancelAppointment,
+    updateAppointmentStatus,
+    adminCancelAppointment
 } from "../controllers/appointment.controller.js";
 
 import {
@@ -18,9 +19,11 @@ import {
 const router = express.Router();
 
 
-// ================= CREATE APPOINTMENT =================
-// Patient appointment create karega
+// =====================================================
+// PATIENT
+// =====================================================
 
+// Create
 router.post(
     "/",
     protect,
@@ -28,10 +31,7 @@ router.post(
     createAppointment
 );
 
-
-// ================= GET MY APPOINTMENTS - PATIENT =================
-// Patient apne appointments dekhega
-
+// My appointments
 router.get(
     "/my",
     protect,
@@ -39,32 +39,7 @@ router.get(
     getMyAppointments
 );
 
-
-// ================= GET MY APPOINTMENTS - DOCTOR =================
-// Doctor apne saare appointments dekhega
-
-router.get(
-    "/doctor/my",
-    protect,
-    authorize("doctor"),
-    getDoctorAppointments
-);
-
-
-// ================= GET ALL APPOINTMENTS - ADMIN =================
-// Admin sabhi appointments dekhega
-
-router.get(
-    "/admin/all",
-    protect,
-    authorize("admin"),
-    getAllAppointments
-);
-
-
-// ================= GET APPOINTMENT BY ID =================
-// Patient apni specific appointment dekhega
-
+// Get specific appointment
 router.get(
     "/:id",
     protect,
@@ -72,10 +47,7 @@ router.get(
     getAppointmentById
 );
 
-
-// ================= CANCEL APPOINTMENT =================
-// Patient apni appointment cancel karega
-
+// Patient cancel
 router.patch(
     "/:id/cancel",
     protect,
@@ -84,5 +56,46 @@ router.patch(
 );
 
 
-export default router;
+// =====================================================
+// DOCTOR
+// =====================================================
 
+// Doctor appointments
+router.get(
+    "/doctor/my",
+    protect,
+    authorize("doctor"),
+    getDoctorAppointments
+);
+
+// Doctor update status
+router.patch(
+    "/doctor/:id/status",
+    protect,
+    authorize("doctor"),
+    updateAppointmentStatus
+);
+
+
+// =====================================================
+// ADMIN
+// =====================================================
+
+// All appointments
+router.get(
+    "/admin/all",
+    protect,
+    authorize("admin"),
+    getAllAppointments
+);
+
+// Admin cancel
+router.patch(
+    "/admin/:id/cancel",
+    protect,
+    authorize("admin"),
+    adminCancelAppointment
+);
+
+
+export default router;

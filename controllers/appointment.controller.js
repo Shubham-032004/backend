@@ -511,3 +511,283 @@ export const cancelAppointment = async (req, res) => {
     }
 };
 
+
+
+
+
+
+// =====================================================
+// UPDATE APPOINTMENT STATUS - DOCTOR
+// =====================================================
+
+export const updateAppointmentStatus = async (req, res) => {
+    try {
+
+        const userId = req.user.id;
+
+        const { id } = req.params;
+
+        const {
+            status,
+            cancellationReason
+        } = req.body;
+
+
+        // ================= VALIDATE STATUS =================
+
+        const allowedStatuses = [
+            "pending",
+            "confirmed",
+            "completed",
+            "cancelled",
+            "no-show"
+        ];
+
+        if (!status) {
+            return res.status(400).json({
+                success: false,
+                message: "Status is required"
+            });
+        }
+
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid appointment status"
+            });
+        }
+
+
+        // ================= FIND DOCTOR =================
+
+        const doctor = await Doctor.findOne({
+            user: userId
+        });
+
+        if (!doctor) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor profile not found"
+            });
+        }
+
+
+        // ================= FIND APPOINTMENT =================
+
+        const appointment = await Appointment.findOne({
+            _id: id,
+            doctor: doctor._id
+        });
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found"
+            });
+        }
+
+
+        // ================= CHECK CURRENT STATUS =================
+
+        if (appointment.status === "cancelled") {
+            return res.status(400).json({
+                success: false,
+                message: "Cancelled appointment cannot be updated"
+            });
+        }
+
+        if (appointment.status === "completed") {
+            return res.status(400).json({
+                success: false,
+                message: "Completed appointment cannot be updated"
+            });
+        }
+
+
+
+        // ================= UPDATE STATUS =================
+
+        appointment.status = status;
+
+
+        // ================= IF CANCELLED =================
+
+        if (status === "cancelled") {
+
+            appointment.cancelledAt = new Date();
+
+            appointment.cancelledBy = "doctor";
+
+            appointment.cancellationReason =
+                cancellationReason || "";
+
+            // Refund if already paid
+            if (appointment.paymentStatus === "paid") {
+                appointment.paymentStatus = "refunded";
+            }
+        }
+
+
+        await appointment.save();
+
+
+        // ================= RESPONSE =================
+
+        const updatedAppointment = await Appointment
+            .findById(appointment._id)
+            .populate({
+                path: "patient",
+                populate: {
+                    path: "user",
+                    select: "name email phone profileImage"
+                }
+            })
+            .populate(
+                "doctor",
+                "specialization experienceYears consultationFee bio languages"
+            )
+            .populate(
+                "hospital",
+                "name address phone"
+            )
+            .populate(
+                "availability",
+                "day startTime endTime consultationType"
+            );
+
+
+        return res.status(200).json({
+            success: true,
+            message: `Appointment status updated to ${status}`,
+            appointment: updatedAppointment
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Update Appointment Status Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+
+
+
+// =====================================================
+// CANCEL APPOINTMENT - ADMIN
+// =====================================================
+
+export const adminCancelAppointment = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const {
+            cancellationReason
+        } = req.body;
+
+
+        // ================= FIND APPOINTMENT =================
+
+        const appointment = await Appointment.findById(id);
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found"
+            });
+        }
+
+
+        // ================= CHECK STATUS =================
+
+        if (appointment.status === "cancelled") {
+            return res.status(400).json({
+                success: false,
+                message: "Appointment is already cancelled"
+            });
+        }
+
+
+        if (appointment.status === "completed") {
+            return res.status(400).json({
+                success: false,
+                message: "Completed appointment cannot be cancelled"
+            });
+        }
+
+
+        // ================= CANCEL =================
+
+        appointment.status = "cancelled";
+
+        appointment.cancelledAt = new Date();
+
+        appointment.cancelledBy = "admin";
+
+        appointment.cancellationReason =
+            cancellationReason || "";
+
+
+        // ================= REFUND =================
+
+        if (appointment.paymentStatus === "paid") {
+            appointment.paymentStatus = "refunded";
+        }
+
+
+        await appointment.save();
+
+
+        // ================= RESPONSE =================
+
+        const updatedAppointment = await Appointment
+            .findById(appointment._id)
+            .populate({
+                path: "patient",
+                populate: {
+                    path: "user",
+                    select: "name email phone profileImage"
+                }
+            })
+            .populate(
+                "doctor",
+                "specialization experienceYears consultationFee bio languages"
+            )
+            .populate(
+                "hospital",
+                "name address phone"
+            )
+            .populate(
+                "availability",
+                "day startTime endTime consultationType"
+            );
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Appointment cancelled by admin",
+            appointment: updatedAppointment
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Admin Cancel Appointment Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
